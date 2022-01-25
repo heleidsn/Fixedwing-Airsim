@@ -247,6 +247,28 @@ class Simulation:
         pose.orientation = airsim.to_quaternion(euler_angles[0], euler_angles[1], euler_angles[2])
         self.client.simSetVehiclePose(pose, False)  # boolean is whether to ignore collisions
 
+    def update_airsim_with_noise(self, time=0, add_noise=False) -> None:
+        """
+        Update airsim with vehicle pose calculated by JSBSim with noise
+        Used for Flapping Wing simulation
+
+        :return: None
+        """
+        pose = self.client.simGetVehiclePose()
+        position = self.get_local_position()
+        pose.position.x_val = position[0]
+        pose.position.y_val = position[1]
+        pose.position.z_val = - position[2]
+        euler_angles = self.get_local_orientation()
+
+        # add 5Hz flapping to pitch to body frame
+        noise = 0
+        if add_noise:
+            noise = math.sin(time * 2 * math.pi * 5) * math.radians(5)
+        
+        pose.orientation = airsim.to_quaternion(euler_angles[0]+noise, euler_angles[1], euler_angles[2])
+        self.client.simSetVehiclePose(pose, False)  # boolean is whether to ignore collisions
+
     def get_collision_info(self) -> airsim.VehicleClient.simGetCollisionInfo:
         """
         Gets collision info created by Airsim via the unreal engine

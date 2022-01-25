@@ -14,6 +14,9 @@ from report_diagrams import ReportGraphs
 from image_processing import AirSimImages, SemanticImageSegmentation
 from typing import Type, Tuple, Dict
 
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
 
 class ClosedLoop:
     """
@@ -104,6 +107,44 @@ class ClosedLoop:
             self.get_graph_data()
             if not self.over:
                 self.over = self.ap.arc_path(profile, 400)
+            if self.over:
+                print('over and out!')
+                break
+            self.sim.run()
+
+    def simulation_loop_flapping_wing(self, profile: tuple) -> None:
+        """
+        Runs the closed loop simulation and updates to airsim simulation based on the class level definitions
+
+        :param profile: a tuple of tuples of the aircraft's profile in (lat [m], long [m], alt [feet])
+        :return: None
+        """
+        update_num = int(self.sim_time * self.sim_frequency_hz)  # how many simulation steps to update the simulation
+        relative_update = self.airsim_frequency_hz / self.sim_frequency_hz  # rate between airsim and JSBSim
+        graphic_update = 0
+        image = AirSimImages(self.sim)
+        image.get_np_image(image_type=airsim.ImageType.Scene)
+        for i in range(update_num):
+            time = i * self.sim_time / update_num
+            graphic_i = relative_update * i
+            graphic_update_old = graphic_update
+            graphic_update = graphic_i // 1.0
+
+            #  print(graphic_i, graphic_update_old, graphic_update)
+            #  print(self.display_graphics)
+            if self.display_graphics and graphic_update > graphic_update_old:
+                self.sim.update_airsim_with_noise(time, add_noise=False)
+                # print('update_airsim')
+
+            airspeed_setpoint_m_per_second = 15
+            self.ap.airspeed_hold_w_throttle(airspeed_setpoint_m_per_second * 1.94384)
+            self.get_graph_data()
+            if not self.over:
+                # self.over = self.ap.arc_path(profile, 400)
+                self.ap.altitude_hold(20)
+                roll_sp_rad = math.sin(time * 2 * math.pi / 5) * math.radians(20)
+                # print(time, roll_sp_rad)
+                self.ap.roll_hold(roll_sp_rad)
             if self.over:
                 print('over and out!')
                 break
@@ -212,10 +253,13 @@ def run_simulator_test() -> None:
     env.generate_figures()
     print('Simulation ended')
 
+def run_simulator_flapping_wing() -> None:
+    env = ClosedLoop(20, True, airspeed=15 * 3.2808,sim_frequency_hz=1000, airsim_frequency_hz=200)
+    env.simulation_loop_flapping_wing(None)
+    print('Simulation ended')
+
 
 if __name__ == '__main__':
-    run_simulator()
+    # run_simulator()
     # run_simulator_test()
-
-
-
+    run_simulator_flapping_wing()
