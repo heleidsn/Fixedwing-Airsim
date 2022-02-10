@@ -137,17 +137,18 @@ class ClosedLoop:
                 # print('update_airsim')
 
             airspeed_setpoint_m_per_second = 15
-            self.ap.airspeed_hold_w_throttle(airspeed_setpoint_m_per_second * 1.94384)
-            self.get_graph_data()
+            self.ap.airspeed_hold_w_throttle(airspeed_setpoint_m_per_second)
             if not self.over:
                 # self.over = self.ap.arc_path(profile, 400)
                 self.ap.altitude_hold(20)
-                roll_sp_rad = math.sin(time * 2 * math.pi / 5) * math.radians(20)
+                # roll_sp_rad = math.sin(time * 2 * math.pi / 5) * math.radians(20)
                 # print(time, roll_sp_rad)
+                roll_sp_rad = math.radians(30)
                 self.ap.roll_hold(roll_sp_rad)
             if self.over:
                 print('over and out!')
                 break
+            # self.get_graph_data()
             self.sim.run()
 
     def test_loop(self) -> None:
@@ -209,9 +210,10 @@ class ClosedLoop:
 
         :return: None
         """
+        self.graph.att_plot()
         self.graph.control_plot()
-        self.graph.trace_plot_abs()
-        self.graph.three_d_scene()
+        # self.graph.trace_plot_abs()
+        # self.graph.three_d_scene()
         self.graph.pitch_rate_plot()
         self.graph.roll_rate_plot()
         # self.graph.roll_rate_plot()
@@ -254,8 +256,9 @@ def run_simulator_test() -> None:
     print('Simulation ended')
 
 def run_simulator_flapping_wing() -> None:
-    env = ClosedLoop(20, True, airspeed=15 * 3.2808,sim_frequency_hz=1000, airsim_frequency_hz=200)
+    env = ClosedLoop(10, True, airspeed=15 * 3.2808,sim_frequency_hz=50, airsim_frequency_hz=50)
     env.simulation_loop_flapping_wing(None)
+    env.generate_figures()
     print('Simulation ended')
 
 

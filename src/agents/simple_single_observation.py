@@ -1,3 +1,6 @@
+import sys
+sys.path.append(r"C:\Users\helei\Documents\GitHub\PY_17_Sim\Fixedwing-Airsim\src")
+
 from envs.single_observation import SingleObservation
 import gym
 import numpy as np
