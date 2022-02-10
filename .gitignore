@@ -12,3 +12,6 @@ data
 .*
 /__pycache__/
 src/segmentation/report_plotting.py
+td3_learning_tensorboard/
+*.eps
+wandb/
