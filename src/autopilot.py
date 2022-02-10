@@ -225,13 +225,14 @@ class X8Autopilot:
 
     def airspeed_hold_w_throttle(self, airspeed_comm: float) -> None:
         """
-        Maintains a commanded airspeed [KTAS] using throttle_cmd and a PI controller
+        Maintains a commanded airspeed [m/s] using throttle_cmd and a PI controller
 
-        :param airspeed_comm: commanded airspeed [KTAS]
+        :param airspeed_comm: commanded airspeed [m/s]
         :return: None
         """
         # Appears fine with simple proportional controller, light airspeed instability at high speed (100kts)
-        error = airspeed_comm - (self.sim[prp.airspeed] * 0.5925)  # set airspeed in KTAS'
+        # 1ft/s= 0.3048 m / s
+        error = airspeed_comm - self.sim[prp.airspeed] * 0.3048
         kp = 1.0
         ki = 0.035
         airspeed_controller = PID(kp, ki, 0.0)
